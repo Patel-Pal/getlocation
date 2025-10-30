@@ -37,6 +37,52 @@
       border-radius: 8px;
       background: #161b22;
       box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+      text-align: left;
+      width: 320px;
+    }
+
+    /* Popup overlay */
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    /* Popup box */
+    .popup {
+      background: #161b22;
+      color: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      text-align: center;
+      width: 300px;
+      box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+    }
+
+    .popup h3 {
+      margin-bottom: 10px;
+    }
+
+    .popup button {
+      background: #0078ff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 15px;
+      margin-top: 10px;
+    }
+
+    .popup button:hover {
+      background: #005fcc;
     }
   </style>
 </head>
@@ -46,15 +92,28 @@
 
   <div class="info-box" id="output"></div>
 
+  <!-- Popup HTML -->
+  <div class="popup-overlay" id="popupOverlay">
+    <div class="popup">
+      <h3>📍 Location Access Required</h3>
+      <p>Please enable location services in your device settings to continue.</p>
+      <button id="closePopup">Okay</button>
+    </div>
+  </div>
+
   <script>
     const btn = document.getElementById("getLocationBtn");
     const output = document.getElementById("output");
+    const popupOverlay = document.getElementById("popupOverlay");
+    const closePopup = document.getElementById("closePopup");
 
     btn.addEventListener("click", () => {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showPosition, showError);
+        navigator.geolocation.getCurrentPosition(showPosition, showError, {
+          timeout: 10000,
+        });
       } else {
-        output.innerHTML = "<p>Geolocation is not supported by this browser.</p>";
+        output.innerHTML = "<p>❌ Geolocation is not supported by this browser.</p>";
       }
     });
 
@@ -89,7 +148,7 @@
           <button onclick="downloadCSV('${lat}','${lon}','${state}','${district}','${country}','${dateTime}')">Download CSV</button>
         `;
       } catch (err) {
-        output.innerHTML = `<p>Error fetching location details.</p>`;
+        output.innerHTML = `<p>⚠️ Error fetching location details.</p>`;
         console.error(err);
       }
     }
@@ -97,7 +156,7 @@
     function showError(error) {
       switch (error.code) {
         case error.PERMISSION_DENIED:
-          output.innerHTML = "❌ User denied the request for Geolocation.";
+          showPopup();
           break;
         case error.POSITION_UNAVAILABLE:
           output.innerHTML = "⚠️ Location information is unavailable.";
@@ -106,10 +165,18 @@
           output.innerHTML = "⌛ The request to get user location timed out.";
           break;
         default:
-          output.innerHTML = "An unknown error occurred.";
+          output.innerHTML = "❌ An unknown error occurred.";
           break;
       }
     }
+
+    function showPopup() {
+      popupOverlay.style.display = "flex";
+    }
+
+    closePopup.addEventListener("click", () => {
+      popupOverlay.style.display = "none";
+    });
 
     function downloadCSV(lat, lon, state, district, country, dateTime) {
       const csvContent =
